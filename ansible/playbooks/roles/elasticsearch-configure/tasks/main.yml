@@ -1,0 +1,25 @@
+---
+#
+# Configure elasticsearch
+#
+
+- name: Copy templated elasticsearch.yml
+  template:
+    src: "{{role_path}}/files/configures/elasticsearch/elasticsearch.yml"
+    dest: "/etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}/elasticsearch.yml"
+    owner: root
+    group: elasticsearch
+    mode: 0660
+
+- name: Copy templated jvm.options
+  template:
+    src: "{{role_path}}/files/configures/elasticsearch/jvm.options"
+    dest: "/etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}/jvm.options"
+    owner: root
+    group: elasticsearch
+    mode: 0660
+
+- name: Add Keystore Settings
+  shell: "export ES_PATH_CONF=/etc/elasticsearch{{instance_id if instance_id is defined else ''}};echo {{item.value}} | /usr/share/elasticsearch/bin/elasticsearch-keystore add {{item.key}} -xf"
+  loop: "{{ keystore }}"
+  when: "keystore is defined"

@@ -1,0 +1,20 @@
+---
+- hosts: elasticsearch
+  roles:
+    - { role: system-stop-firewall }
+    - { role: elasticsearch-install }
+    - { role: elasticsearch-configure }
+    - { role: elasticsearch-generate-certificate }
+    - { role: elasticsearch-restart }
+
+- hosts: elasticsearch
+  tags:
+    - monitor
+  roles:
+    - role: beats-install
+      vars:
+        beats: [ filebeat ]
+    - role: beats-monitor-elasticsearch
+    - role: beats-restart
+      vars:
+        beats: [ filebeat ]

@@ -1,0 +1,14 @@
+monitoring:
+  enabled: true
+  elasticsearch:
+    hosts: ["http://{{ groups['elasticsearch'] | map('extract', hostvars, [host_field]) | join(':9200", "http://') }}:9200"]
+    username: beats_system
+    password: "{{ beats_system_password }}"
+metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+output.elasticsearch:
+  hosts: ["http://{{ groups['elasticsearch'] | map('extract', hostvars, [host_field]) | join(':9200","http://') }}:9200"]
+  # Optional protocol and basic auth credentials.
+  #protocol: "https"
+  username: "writer"
+  password: "{{writer_password}}"

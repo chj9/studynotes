@@ -1,0 +1,16 @@
+#jinja2: trim_blocks:False
+{% if pipelines is defined %}
+{%- for pipeline in pipelines %}
+- pipeline.id: {{pipeline}}
+  path.config: "/etc/logstash/conf.d/{{pipeline}}.conf"
+{% if pipeline.workers is defined %}  pipeline.workers: {{pipeline.workers}}{% endif %}
+{% if pipeline.batch.size is defined %}  pipeline.batch.size: {{pipeline.batch_size}}{% endif %}
+{% if pipeline.batch.delay is defined %}  pipeline.batch.delay: {{pipeline.batch_delay}}
+{% endif %}
+
+{%- endfor %}
+{% endif %}
+
+{% if config_pipelines %}
+{{ config_pipelines | to_nice_yaml(indent=2) }}
+{% endif %}

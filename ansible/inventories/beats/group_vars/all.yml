@@ -1,0 +1,12 @@
+#ansible_user: elk
+#ansible_password: password
+version: 7.5.1
+beats: [filebeat, metricbeat]
+
+enroll_user: elastic
+enroll_pass:
+
+path_tmp: /tmp/puxiangtech                      # 离线上传安装包目录
+ansible_become: True
+ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+ansible_ssh_private_key_file: ~/.ssh/id_rsa

@@ -1,0 +1,48 @@
+---
+#
+# Install kafka
+#
+
+- name: Create tmp dir
+  file:
+    path: "{{path_tmp}}"
+    state: directory
+
+- name: Copy jdk rpm file
+  copy:
+    src: "packages/{{jdk_file}}"
+    dest: "{{path_tmp}}/{{jdk_file}}"
+
+- name: Install jdk
+  yum:
+    name: "{{path_tmp}}/{{jdk_file}}"
+    state: latest
+
+- name: Copy kafka tgz file
+  copy:
+    src: "packages/kafka_{{kafka_version}}.tgz"
+    dest: "{{path_tmp}}/kafka_{{kafka_version}}.tgz"
+
+- name: "Extract kafka.tgz into {{path_install}}/kafka"
+  unarchive:
+    src: "{{path_tmp}}/kafka_{{kafka_version}}.tgz"
+    remote_src: true
+    dest: "{{path_install}}"
+
+- name: Create symbolic link
+  file:
+    src: "{{path_install}}/kafka_{{kafka_version}}"
+    dest: "{{path_install}}/kafka"
+    state: link
+
+- name: Copy templated kafka.service
+  template:
+    src: kafka.service
+    dest: /usr/lib/systemd/system/kafka.service
+
+- name: modify jvm heap
+  command: sed -ri 's/KAFKA_HEAP_OPTS=".*?"/KAFKA_HEAP_OPTS="-Xmx{{jvm_xms}} -Xms{{jvm_xmx}}"/' /opt/kafka/bin/kafka-server-start.sh
+
+- service:
+    name: kafka
+    enabled: yes

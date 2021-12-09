@@ -1,0 +1,58 @@
+---
+#
+# Install logstash
+#
+
+- name: mount tmp dir with exec
+  shell: |
+    sed -i '/ \/tmp/s/,noexec//g' /etc/fstab \
+    && sed -i '/ \/tmp/s/noexec,//g' /etc/fstab \
+    && sed -i '/ \/tmp/s/noexec//g' /etc/fstab
+
+- name: mount tmp dir with exec
+  ignore_errors: yes
+  shell: mount -o remount,exec /tmp
+
+- name: Create tmp dir
+  file:
+    path: "{{path_tmp}}/logstash-plugins"
+    state: directory
+
+- name: Copy jdk rpm file
+  copy:
+    src: "packages/{{jdk_file}}"
+    dest: "{{path_tmp}}/{{jdk_file}}"
+
+- name: Install jdk
+  yum:
+    name: "{{path_tmp}}/{{jdk_file}}"
+    state: latest
+
+- name: Copy logstash rpm file
+  copy:
+    src: "packages/logstash-{{version}}.rpm"
+    dest: "{{path_tmp}}/logstash-{{version}}.rpm"
+
+- name: Copy logstash plugins
+  copy:
+    src: "packages/logstash-plugins/{{item}}.zip"
+    dest: "{{path_tmp}}/logstash-plugins/{{item}}.zip"
+  loop: "{{ plugins }}"
+
+- name: Install logstash
+  yum:
+    name: "{{path_tmp}}/logstash-{{version}}.rpm"
+    state: latest
+
+- name: Install logstash plugins
+  shell: "export LS_JAVA_OPTS=\"-Xmx200m -Xmn75m -Xms200m\"; /usr/share/logstash/bin/logstash-plugin install file://{{path_tmp}}/logstash-plugins/{{item}}.zip"
+  loop: "{{ plugins }}"
+
+- service:
+    name: logstash
+    enabled: yes
+
+- name: install rsync
+  yum:
+    name: rsync
+    state: latest

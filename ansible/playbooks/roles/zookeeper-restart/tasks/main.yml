@@ -1,0 +1,12 @@
+---
+#
+# Full Restart Zookeeper
+#
+
+- service:
+    name: zookeeper
+    state: stopped
+
+- service:
+      name: zookeeper
+      state: started

@@ -1,0 +1,50 @@
+- module: elasticsearch
+  # Server log
+  server:
+    enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    var.paths:
+      - {{ hostvars[inventory_hostname]['path_logs'] }}{{instance_id if instance_id is defined else ''}}/{{ cluster_name }}.log
+
+    # Convert the timestamp to UTC. Requires Elasticsearch >= 6.1.
+    var.convert_timezone: true
+
+  gc:
+    enabled: true
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    var.paths:
+      - {{ hostvars[inventory_hostname]['path_logs'] }}{{instance_id if instance_id is defined else ''}}/gc.log
+    var.convert_timezone: true
+
+  audit:
+    enabled: true
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    var.paths:
+      - {{ hostvars[inventory_hostname]['path_logs'] }}{{instance_id if instance_id is defined else ''}}/*_access.log
+
+    # Convert the timestamp to UTC. Requires Elasticsearch >= 6.1.
+    var.convert_timezone: true
+
+  slowlog:
+    enabled: true
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    var.paths:
+      - {{ hostvars[inventory_hostname]['path_logs'] }}{{instance_id if instance_id is defined else ''}}/*_index_search_slowlog.log
+      - {{ hostvars[inventory_hostname]['path_logs'] }}{{instance_id if instance_id is defined else ''}}/*_index_indexing_slowlog.log
+    # Convert the timestamp to UTC. Requires Elasticsearch >= 6.1.
+    var.convert_timezone: true
+
+  deprecation:
+    enabled: true
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    var.paths:
+      - {{ hostvars[inventory_hostname]['path_logs'] }}{{instance_id if instance_id is defined else ''}}/*_deprecation.log
+
+    # Convert the timestamp to UTC. Requires Elasticsearch >= 6.1.
+    var.convert_timezone: true

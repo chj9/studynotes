@@ -1,0 +1,46 @@
+# inventory   : https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
+# ansible.cfg : https://docs.ansible.com/ansible/2.4/intro_configuration.html
+# 注意： 同一个 inventory_hostname 下的变量会覆盖
+
+[elasticsearch]
+192.168.0.1 role=master
+192.168.0.2
+192.168.0.3
+
+[kibana]
+192.168.0.4 es_hosts=192.168.0.1,192.168.0.2
+
+[logstash]
+192.168.0.5
+192.168.0.6
+
+[kafka]
+
+[zookeeper]
+
+
+# ============ 以下为单机多实例配置 ======================
+# 需修改 group_vars/all.yml 中 host_field 为 ansible_host
+# instance_id 决定了 启动脚本、数据目录、日志目录 的路径，一旦部署后不建议修改。(目前仅 ES 支持)
+# ======================================================
+#
+# [all:vars]
+# host_field=ansible_host
+# [elasticsearch]
+# es1 ansible_host=192.168.0.1
+# es2 ansible_host=192.168.0.1 instance_id=2
+# es3 ansible_host=192.168.0.1 instance_id=3
+# es4 ansible_host=192.168.0.2
+# es5 ansible_host=192.168.0.2 instance_id=2
+# es6 ansible_host=192.168.0.2 instance_id=3
+#
+# [kibana]
+# kibana ansible_host=192.168.0.4 es_hosts=192.168.0.1,192.168.0.2
+#
+# [logstash]
+# ls1 ansible_host=192.168.0.5
+# ls2 ansible_host=192.168.0.6
+#
+# [kafka]
+#
+# [zookeeper]

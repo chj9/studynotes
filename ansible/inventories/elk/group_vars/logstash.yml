@@ -1,0 +1,5 @@
+jvm_heap_memory_rate: 0.7
+jvm_young_heap_memory_rate: 0.5
+pipelines:
+  - name: main
+    workers: 1

@@ -1,0 +1,26 @@
+---
+- hosts: zookeeper
+  roles:
+    - { role: system-stop-firewall }
+    - { role: zookeeper-install }
+    - { role: zookeeper-configure }
+    - { role: zookeeper-restart }
+
+- hosts: kafka
+  roles:
+    - { role: system-stop-firewall }
+    - { role: kafka-install }
+    - { role: kafka-configure }
+    - { role: kafka-restart }
+
+- hosts: kafka
+  tags:
+    - monitor
+  roles:
+    - role: beats-install
+      vars:
+        beats: [ filebeat, metricbeat ]
+    - role: beats-monitor-kafka
+    - role: beats-restart
+      vars:
+        beats: [ filebeat, metricbeat ]

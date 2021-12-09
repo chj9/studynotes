@@ -1,0 +1,11 @@
+- name: Copy templated filebeat configures
+  template:
+    src: "filebeat.yml"
+    dest: "/etc/filebeat/filebeat.yml"
+    mode: 0644
+
+- name: Copy templated filebeat configures
+  template:
+    src: "filebeat-logstash.yml"
+    dest: "/etc/filebeat/modules.d/logstash.yml"
+    mode: 0644

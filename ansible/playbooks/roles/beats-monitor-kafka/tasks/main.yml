@@ -1,0 +1,24 @@
+- name: Copy templated filebeat configures
+  template:
+    src: "filebeat.yml"
+    dest: "/etc/filebeat/filebeat.yml"
+    mode: 0644
+
+- name: Copy templated filebeat configures
+  template:
+    src: "filebeat-kafka.yml"
+    dest: "/etc/filebeat/modules.d/kafka.yml"
+    mode: 0644
+
+- name: Copy templated metricbeat configures
+  template:
+    src: "metricbeat.yml"
+    dest: "/etc/metricbeat/metricbeat.yml"
+    mode: 0644
+
+- name: Copy templated filebeat configures
+  template:
+    src: "metricbeat-kafka.yml"
+    dest: "/etc/metricbeat/modules.d/kafka.yml"
+    mode: 0644
+

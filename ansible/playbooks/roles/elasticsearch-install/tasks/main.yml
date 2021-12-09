@@ -1,0 +1,148 @@
+---
+#
+# Install elasticsearch
+#
+
+- name: Set Facts
+  set_fact:
+    path_conf: "/etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}"
+
+- sysctl:
+    name: vm.swappiness
+    value: 1
+  when: "instance_id is not defined"
+
+- sysctl:
+    name: vm.max_map_count
+    value: 262144
+  when: "instance_id is not defined"
+
+- name: mount tmp dir with exec in fstab
+  shell: |
+    sed -i '/ \/tmp/s/,noexec//g' /etc/fstab \
+    && sed -i '/ \/tmp/s/noexec,//g' /etc/fstab \
+    && sed -i '/ \/tmp/s/noexec//g' /etc/fstab
+  when: "instance_id is not defined"
+
+- name: mount tmp dir with exec
+  ignore_errors: yes
+  shell: mount -o remount,exec /tmp
+  when: "instance_id is not defined"
+
+- name: Create tmp directory
+  file:
+    path: "{{path_tmp}}/elasticsearch-plugins"
+    state: directory
+  when: "instance_id is not defined"
+
+- name: Copy jdk rpm file
+  copy:
+    src: "packages/{{jdk_file}}"
+    dest: "{{path_tmp}}/{{jdk_file}}"
+  when: "id is not defined and version is version('7.0.0', '<')"
+
+- name: Install jdk
+  yum:
+    name: "{{path_tmp}}/{{jdk_file}}"
+    state: latest
+  when: "id is not defined and version is version('7.0.0', '<')"
+
+- name: Copy elasticsearch rpm file
+  copy:
+    src: "packages/elasticsearch-{{version}}{{ '-x86_64' if version is version_compare('7.0.0', '>=') else '' }}.rpm"
+    dest: "{{path_tmp}}/elasticsearch-{{version}}{{ '-x86_64' if version is version_compare('7.0.0', '>=') else '' }}.rpm"
+  when: "instance_id is not defined"
+
+- name: Copy elasticsearch plugins
+  copy:
+    src: "packages/elasticsearch-plugins/{{item}}-{{version}}.zip"
+    dest: "{{path_tmp}}/elasticsearch-plugins/{{item}}-{{version}}.zip"
+  loop: "{{ plugins }}"
+  when: "instance_id is not defined"
+
+- name: Install elasticsearch
+  yum:
+    name: "{{path_tmp}}/elasticsearch-{{version}}{{ '-x86_64' if version is version_compare('7.0.0', '>=') else '' }}.rpm"
+    state: latest
+  when: "instance_id is not defined"
+
+- name: Remove elasticsearch plugins
+  ignore_errors: yes
+  shell: "export ES_PATH_CONF={{path_conf}}; /usr/share/elasticsearch/bin/elasticsearch-plugin remove {{item}}"
+  loop: "{{ plugins }}"
+  when: "instance_id is not defined"
+
+- name: Install elasticsearch plugins
+  ignore_errors: yes
+  shell: "export ES_PATH_CONF={{path_conf}}; /usr/share/elasticsearch/bin/elasticsearch-plugin install -b file://{{path_tmp}}/elasticsearch-plugins/{{item}}-{{version}}.zip"
+  loop: "{{ plugins }}"
+  when: "instance_id is not defined"
+
+- name: Duplicate Elasticsearch Systemd Service File
+  shell: "cp -p /usr/lib/systemd/system/elasticsearch.service /usr/lib/systemd/system/elasticsearch{{instance_id}}.service"
+  when: "instance_id is defined"
+
+- name: Duplicate Elasticsearch Configuration Dir
+  shell: "cp -pr /etc/elasticsearch /etc/elasticsearch{{instance_id}}"
+  when: "instance_id is defined"
+
+- name: Duplicate Elasticsearch Log Dir
+  shell: "cp -pr /var/log/elasticsearch /var/log/elasticsearch{{instance_id}}"
+  when: "instance_id is defined"
+
+- name: Duplicate Environment File
+  shell: "cp -p /etc/sysconfig/elasticsearch /etc/sysconfig/elasticsearch{{instance_id}}"
+  when: "instance_id is defined"
+
+- name: Comment out source env in elasticsearch-env
+  lineinfile:
+    path: /usr/share/elasticsearch/bin/elasticsearch-env
+    regexp: '^source /etc/sysconfig/elasticsearch'
+    line: '#source /etc/sysconfig/elasticsearch'
+  when: "instance_id is defined"
+
+- name: Change RuntimeDirectory in systemd
+  lineinfile:
+    path: "/usr/lib/systemd/system/elasticsearch{{instance_id}}.service"
+    regexp: '^RuntimeDirectory'
+    line: "RuntimeDirectory=elasticsearch{{instance_id}}"
+  when: "instance_id is defined"
+
+- name: Change ES_PATH_CONF in systemd
+  lineinfile:
+    path: "/usr/lib/systemd/system/elasticsearch{{instance_id}}.service"
+    regexp: '^Environment=ES_PATH_CONF'
+    line: "Environment=ES_PATH_CONF=/etc/elasticsearch{{instance_id}}"
+  when: "instance_id is defined"
+
+- name: Change PID DIR in systemd
+  lineinfile:
+    path: "/usr/lib/systemd/system/elasticsearch{{instance_id}}.service"
+    regexp: '^Environment=PID_DIR'
+    line: "Environment=PID_DIR=/var/run/elasticsearch{{instance_id}}"
+  when: "instance_id is defined"
+
+- name: Change Environment File in systemd
+  lineinfile:
+    path: "/usr/lib/systemd/system/elasticsearch{{instance_id}}.service"
+    regexp: '^EnvironmentFile'
+    line: "EnvironmentFile=-/etc/sysconfig/elasticsearch{{instance_id}}"
+  when: "instance_id is defined"
+
+- name: Change ES_PATH_CONF in Environment File
+  lineinfile:
+    path: "/etc/sysconfig/elasticsearch{{instance_id}}"
+    regexp: '^ES_PATH_CONF'
+    line: "ES_PATH_CONF=/etc/elasticsearch{{instance_id}}"
+  when: "instance_id is defined"
+
+- name: Create data directory
+  file:
+    path: "{{path_data}}{{'-'~instance_id if instance_id is defined else ''}}/"
+    state: directory
+    owner: elasticsearch
+    group: elasticsearch
+
+- service:
+    name: "elasticsearch{{'-'~instance_id if instance_id is defined else ''}}"
+    enabled: yes

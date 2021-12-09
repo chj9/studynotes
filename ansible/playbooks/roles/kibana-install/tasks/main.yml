@@ -1,0 +1,38 @@
+---
+#
+# Install kibana
+#
+# Note a lot of logstash/ES activity happens here too
+# Because of service ordering.
+
+- name: Create tmp dir
+  file:
+    path: "{{path_tmp}}/kibana-plugins"
+    state: directory
+
+- name: Copy kibana rpm file
+  copy:
+    src: "packages/kibana-{{version}}-x86_64.rpm"
+    dest: "{{path_tmp}}/kibana-{{version}}-x86_64.rpm"
+
+- name: Copy kibana plugins
+  copy:
+    src: "packages/kibana-plugins/{{item}}-{{version}}.zip"
+    dest: "{{path_tmp}}/kibana-plugins/{{item}}-{{version}}.zip"
+  loop: "{{ plugins }}"
+
+- name: Install kibana
+  yum:
+    name: "{{path_tmp}}/kibana-{{version}}-x86_64.rpm"
+    state: latest
+
+- name: Remove kibana plugins
+  ignore_errors: yes
+  shell: "/usr/share/kibana/bin/kibana-plugin remove {{item}}"
+  loop: "{{ plugins }}"
+
+- name: Install kibana plugins
+  ignore_errors: yes
+  shell: "/usr/share/kibana/bin/kibana-plugin --allow-root install file://{{path_tmp}}/kibana-plugins/{{item}}-{{version}}.zip"
+  loop: "{{ plugins }}"
+

@@ -1,0 +1,22 @@
+#ansible_user: elk
+#ansible_password: password
+version: 7.5.1
+xpack: false                                    # 启用 xpack 功能: logstash 集中式管理
+
+writer_password: px_writer_passwd
+kibana_password: px_kibana_passwd
+logstash_admin_password: px_logstash_admin_passwd
+logstash_system_password: px_logstash_system_passwd
+beats_system_password: px_beats_system_passwd
+
+# ======== 不常用配置 =========
+jdk_file: jdk-11.0.5_linux-x64_bin.rpm          # jdk 文件名
+host_field: inventory_hostname                  # 用作 host 的字段名，如 ansible_host 或 inventory_hostname。单机多实例请设置为 ansible_host
+path_tmp: /tmp/puxiangtech                      # 离线上传安装包目录
+path_install: /opt                              # 非 rpm 包软件安装目录
+ca_pass: puxiangtech                            # ca 证书密码
+
+# ======== 不建议修改配置 =========
+ansible_become: True
+ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+ansible_ssh_private_key_file: ~/.ssh/id_rsa

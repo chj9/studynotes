@@ -1,0 +1,7 @@
+---
+- hosts: "{{ hosts }}"
+  roles:
+    - role: beats-configure
+    - role: beats-restart
+      vars:
+        beats: [ filebeat ]

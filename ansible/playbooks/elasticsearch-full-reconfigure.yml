@@ -1,0 +1,5 @@
+---
+- hosts: elasticsearch
+  roles:
+    - { role: elasticsearch-configure }
+    - { role: elasticsearch-restart }

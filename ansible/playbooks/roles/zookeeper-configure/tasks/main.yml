@@ -1,0 +1,14 @@
+---
+#
+# Configure Zookeeper
+#
+
+- name: Copy templated zoo.cfg
+  template:
+    src: "{{role_path}}/files/configures/zookeeper/zoo.cfg"
+    dest: /opt/zookeeper/conf/zoo.cfg
+
+- name: Copy zookeeper myid
+  template:
+    src: "{{role_path}}/files/configures/zookeeper/myid"
+    dest: "{{path_data}}/"

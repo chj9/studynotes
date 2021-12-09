@@ -1,0 +1,158 @@
+# ======================== Elasticsearch Configuration =========================
+#
+# NOTE: Elasticsearch comes with reasonable defaults for most settings.
+#       Before you set out to tweak and tune the configuration, make sure you
+#       understand what are you trying to accomplish and the consequences.
+#
+# The primary way of configuring a node is via this file. This template lists
+# the most important settings you may want to configure for a production cluster.
+#
+# Please consult the documentation for further information on configuration options:
+# https://www.elastic.co/guide/en/elasticsearch/reference/index.html
+#
+# ---------------------------------- Cluster -----------------------------------
+#
+# Use a descriptive name for your cluster:
+#
+cluster.name: {{ cluster_name }}
+#
+# ------------------------------------ Node ------------------------------------
+#
+# Use a descriptive name for the node:
+#
+node.name: {{ ansible_hostname }}{{'_'~instance_id if instance_id is defined else ''}}{{ '-'~zone if zone is defined else '' }}{{ '-'~role if role is defined else '' }}{{ '-'~box_type if box_type is defined else '' }}
+
+#
+# Add custom attributes to the node:
+#
+#node.attr.rack: r1
+#
+{% if role is defined and role == 'master' %}
+node.master: true
+node.data: false
+node.ingest: false
+node.ml: false
+{% elif role is defined and role == 'data' %}
+node.master: false
+node.data: true
+node.ingest: true
+node.ml: true
+{% elif role is defined and role == 'coordinating' %}
+node.master: false
+node.data: false
+node.ingest: true
+node.ml: false
+{% elif role is defined and role == 'ml' %}
+node.master: false
+node.data: false
+node.ingest: false
+node.ml: true
+{% endif %}
+{% if box_type is defined %}
+node.attr.box_type: {{ box_type }}
+{% endif %}
+{% if zone is defined %}
+node.attr.zone: {{ zone }}
+{% endif %}
+#
+# ----------------------------------- Paths ------------------------------------
+#
+# Path to directory where to store the data (separate multiple locations by comma):
+#
+path.data: {{ path_data }}{{'-'~instance_id if instance_id is defined else ''}}
+#
+# Path to log files:
+#
+path.logs: {{ path_logs }}{{'-'~instance_id if instance_id is defined else ''}}
+#
+# ----------------------------------- Memory -----------------------------------
+#
+# Lock the memory on startup:
+#
+#bootstrap.memory_lock: true
+#
+# Make sure that the heap size is set to about half the memory available
+# on the system and that the owner of the process is allowed to use this
+# limit.
+#
+# Elasticsearch performs poorly when the system is swapping the memory.
+#
+# ---------------------------------- Network -----------------------------------
+#
+# Set the bind address to a specific IP (IPv4 or IPv6):
+#
+network.host: 0.0.0.0
+#
+# Set a custom port for HTTP:
+#
+#http.port: 9200
+#
+# For more information, consult the network module documentation.
+#
+{% if version is version('7.0.0', '<') %}
+# --------------------------------- Discovery ----------------------------------
+#
+# Pass an initial list of hosts to perform discovery when new node is restarted:
+# The default list of hosts is ["127.0.0.1", "[::1]"]
+#
+discovery.zen.ping.unicast.hosts: ["{{ (groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'undefined') | list + groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'defined') | selectattr('role','eq', 'master' ) | list) | join('","', attribute=host_field) }}"]
+#
+# Prevent the "split brain" by configuring the majority of nodes (total number of master-eligible nodes / 2 + 1):
+#
+discovery.zen.minimum_master_nodes: {{ (groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'undefined') | list + groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'defined') | selectattr('role','eq', 'master' ) | list) | length // 2 + 1 }}
+#
+# For more information, consult the zen discovery module documentation.
+#
+discovery.zen.fd.ping_interval: 30s
+discovery.zen.fd.ping_timeout: 120s
+{% else %}
+# --------------------------------- Discovery ----------------------------------
+#
+# Pass an initial list of hosts to perform discovery when this node is started:
+# The default list of hosts is ["127.0.0.1", "[::1]"]
+#
+discovery.seed_hosts: ["{{ (groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'undefined') | list + groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'defined') | selectattr('role','eq', 'master' ) | list) | join('","', attribute=host_field) }}"]
+#
+# Bootstrap the cluster using an initial set of master-eligible nodes:
+#
+cluster.initial_master_nodes: [{%- for node in (groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'undefined') | list + groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'defined') | selectattr('role','eq', 'master' ) | list) %}"{{ node['ansible_hostname'] }}{{ '_'~node['instance_id'] if 'instance_id' in node else '' }}{{ '-'~node['zone'] if 'zone' in node else '' }}{{ '-'~node['role'] if 'role' in node else '' }}{{ '-'~node['box_type'] if 'box_type' in node else '' }}"{{ ',' if not loop.last else '' }}{%- endfor %}]
+#
+# For more information, consult the discovery and cluster formation module documentation.
+#
+cluster.fault_detection.follower_check.interval: 30s
+cluster.fault_detection.follower_check.timeout: 120s
+cluster.fault_detection.leader_check.interval: 30s
+cluster.fault_detection.leader_check.timeout: 120s
+cluster.follower_lag.timeout: 600s
+cluster.join.timeout: 600s
+cluster.publish.timeout: 600s
+{% endif %}
+# ---------------------------------- Gateway -----------------------------------
+#
+# Block initial recovery after a full cluster restart until N nodes are restarted:
+#
+#gateway.recover_after_nodes: 3
+#
+# For more information, consult the gateway module documentation.
+#
+{% if role is undefined or role == 'master' %}
+gateway.expected_nodes: {{ (groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'undefined') | list + groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'defined') | selectattr('role','eq', 'master' ) | list + groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'defined') | selectattr('role','eq', 'data' ) | list) | length }}
+gateway.recover_after_time: 10m
+gateway.recover_after_data_nodes: {{ (groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'undefined') | list + groups['elasticsearch'] | map('extract', hostvars) | selectattr('role', 'defined') | selectattr('role','eq', 'data' ) | list) | length }}
+{% endif %}
+#
+# ---------------------------------- Various -----------------------------------
+#
+# Require explicit names when deleting indices:
+#
+#action.destructive_requires_name: true
+
+xpack:
+  security:
+    enabled: true
+    transport:
+      ssl:
+        enabled: true
+        verification_mode: certificate
+        keystore.path: certs/elastic-certificates.p12
+        truststore.path: certs/elastic-certificates.p12

@@ -1,0 +1,14 @@
+---
+#
+# full restart kafka
+#
+
+- name: stop kafka
+  service:
+    name: kafka
+    state: stopped
+
+- name: start kafka
+  service:
+    name: kafka
+    state: started

@@ -1,0 +1,62 @@
+---
+#
+# Configure logstash
+#
+
+- name: Copy templated logstash.yml
+  template:
+    src: "{{role_path}}/files/configures/logstash/logstash.yml"
+    dest: /etc/logstash/logstash.yml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy templated jvm.options
+  template:
+    src: "{{role_path}}/files/configures/logstash/jvm.options"
+    dest: /etc/logstash/jvm.options
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy templated env
+  template:
+    src: "{{role_path}}/files/configures/logstash/env"
+    dest: /etc/default/logstash
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy pipelines.yml
+  template:
+    src: "{{role_path}}/files/configures/logstash/pipelines.yml"
+    dest: /etc/logstash/pipelines.yml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy pipelines
+  synchronize:
+    src: "{{role_path}}/files/configures/logstash-pipelines"
+    dest: /etc/logstash/conf.d
+    delete: true
+
+- name: Copy libs
+  template:
+    src: "{{item}}"
+    dest: "/usr/share/logstash/logstash-core/lib/{{item|basename}}"
+    owner: logstash
+    group: logstash
+    mode: 0644
+  with_fileglob:
+    - "{{role_path}}/files/packages/logstash-libs/*"
+
+- name: Copy Jars
+  template:
+    src: "{{item}}"
+    dest: "/usr/share/logstash/logstash-core/lib/jars/{{item|basename}}"
+    owner: logstash
+    group: logstash
+    mode: 0644
+  with_fileglob:
+    - "{{role_path}}/files/packages/logstash-libs/jars/*"

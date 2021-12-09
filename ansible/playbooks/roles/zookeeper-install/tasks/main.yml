@@ -1,0 +1,45 @@
+---
+#
+# Install Zookeeper
+#
+
+- name: Create tmp dir
+  file:
+    path: "{{path_tmp}}"
+    state: directory
+
+- name: Copy jdk rpm file
+  copy:
+    src: "packages/{{jdk_file}}"
+    dest: "{{path_tmp}}/{{jdk_file}}"
+
+- name: Install jdk
+  yum:
+    name: "{{path_tmp}}/{{jdk_file}}"
+    state: latest
+
+- name: Copy zookeeper tgz file
+  copy:
+    src: "packages/zookeeper-{{zk_version}}.tar.gz"
+    dest: "{{path_tmp}}/zookeeper-{{zk_version}}.tar.gz"
+
+- name: "Extract zookeeper.tgz into {{path_install}}/zookeeper"
+  unarchive:
+    src: "{{path_tmp}}/zookeeper-{{zk_version}}.tar.gz"
+    remote_src: true
+    dest: "{{path_install}}"
+
+- name: Create symbolic link
+  file:
+    src: "{{path_install}}/zookeeper-{{zk_version}}"
+    dest: "{{path_install}}/zookeeper"
+    state: link
+
+- name: Copy templated zookeeper.service
+  template:
+    src: zookeeper.service
+    dest: /usr/lib/systemd/system/zookeeper.service
+
+- service:
+    name: zookeeper
+    enabled: yes

@@ -1,0 +1,2 @@
+- name: "Enroll {{item}}"
+  shell: PASS={{enroll_pass}} {{item}} enroll http://{{groups['kibana']| map('extract', hostvars, [host_field]) | first}}:5601 --username {{enroll_user}} --password env:PASS --force

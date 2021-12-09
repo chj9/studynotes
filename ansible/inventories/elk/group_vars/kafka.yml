@@ -1,0 +1,4 @@
+kafka_version: 2.12-2.3.1
+path_data: /data/kafka
+jvm_xms: 6g
+jvm_xmx: 6g

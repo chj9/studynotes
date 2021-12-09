@@ -1,0 +1,41 @@
+---
+#
+# Install filebeat
+#
+
+- name: Set Facts
+  set_fact:
+    ansible_pkg_suffix: "{% if ansible_pkg_mgr == 'yum' %}rpm{% elif ansible_pkg_mgr == 'apt' %}deb{% endif %}"
+    beats_architecture: "{% if ansible_pkg_mgr == 'apt' and ansible_architecture == 'x86_64' %}amd64{% else %}{{ansible_architecture}}{% endif %}"
+
+- name: Create tmp dir
+  file:
+    path: "{{path_tmp}}"
+    state: directory
+  when: "instance_id is not defined"
+
+- name: Copy {{item}} package
+  copy:
+    src: "packages/{{item}}-{{version}}-{{beats_architecture}}.{{ansible_pkg_suffix}}"
+    dest: "{{path_tmp}}"
+  loop: "{{ beats }}"
+  when: "instance_id is not defined"
+
+- name: Install rpm {{item}}
+  when: "instance_id is not defined and ansible_pkg_mgr == 'yum'"
+  yum:
+    name: "{{path_tmp}}/{{item}}-{{version}}-{{beats_architecture}}.{{ansible_pkg_suffix}}"
+    state: "{{'latest' if ansible_pkg_mgr == 'yum' else 'present'}}"
+  loop: "{{ beats }}"
+
+- name: Install deb {{item}}
+  when: "instance_id is not defined and ansible_pkg_mgr == 'apt'"
+  apt:
+    deb: "{{path_tmp}}/{{item}}-{{version}}-{{beats_architecture}}.{{ansible_pkg_suffix}}"
+    state: "{{'latest' if ansible_pkg_mgr == 'yum' else 'present'}}"
+  loop: "{{ beats }}"
+
+- service:
+    name: "{{item}}"
+    enabled: yes
+  loop: "{{ beats }}"

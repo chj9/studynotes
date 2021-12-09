@@ -1,0 +1,9 @@
+cluster_name: es
+path_data: /data/elasticsearch
+path_logs: /var/log/elasticsearch
+plugins: []
+#keystore:
+#  - key: 's3.client.minio.access_key'
+#    value: 'minio'
+#  - key: 's3.client.minio.secret_key'
+#    value: 'minioadmin'

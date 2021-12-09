@@ -1,0 +1,10 @@
+- name: stop elasticsearch
+  service:
+    name: "elasticsearch{{'-'~instance_id if instance_id is defined else ''}}"
+    state: stopped
+
+- name: start elasticsearch
+  service:
+    name: "elasticsearch{{'-'~instance_id if instance_id is defined else ''}}"
+    state: started
+

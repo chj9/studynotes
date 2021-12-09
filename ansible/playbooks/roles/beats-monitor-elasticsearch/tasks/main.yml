@@ -1,0 +1,11 @@
+- name: Copy templated filebeat configures
+  template:
+    src: "filebeat.yml"
+    dest: "/etc/filebeat/filebeat.yml"
+    mode: 0644
+
+- name: Copy templated filebeat configures
+  template:
+    src: "filebeat-elasticsearch.yml"
+    dest: "/etc/filebeat/modules.d/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}.yml"
+    mode: 0644

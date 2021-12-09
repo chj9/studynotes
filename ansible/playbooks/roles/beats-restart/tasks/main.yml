@@ -1,0 +1,5 @@
+- name: restart {{item}}
+  service:
+    name: "{{item}}"
+    state: restarted
+  loop: "{{ beats }}"

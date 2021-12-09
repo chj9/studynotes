@@ -1,0 +1,19 @@
+---
+- hosts: logstash
+  roles:
+    - { role: system-stop-firewall }
+    - { role: logstash-install }
+    - { role: logstash-configure }
+    - { role: logstash-restart }
+
+- hosts: logstash
+  tags:
+    - monitor
+  roles:
+    - role: beats-install
+      vars:
+        beats: [ filebeat ]
+    - role: beats-monitor-logstash
+    - role: beats-restart
+      vars:
+        beats: [ filebeat ]

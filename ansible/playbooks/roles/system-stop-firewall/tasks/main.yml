@@ -1,0 +1,18 @@
+---
+- name: stop iptables
+  ignore_errors: yes
+  service:
+    name: iptables
+    enabled: false
+    state: stopped
+
+- name: stop firewalld
+  ignore_errors: yes
+  service:
+    name: firewalld
+    enabled: false
+    state: stopped
+
+- name: stop selinux
+  ignore_errors: yes
+  shell: sed -ri s/enforcing/disabled/ /etc/selinux/config && setenforce 0

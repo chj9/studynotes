@@ -1,0 +1,24 @@
+---
+#
+# Generate elasticsearch certificate
+#
+
+- name: Copy ca file
+  copy:
+    src: certs/elastic-stack-ca.p12
+    dest: "/etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}/certs/"
+    owner: root
+    group: elasticsearch
+    mode: 0660
+
+- name: Generate certificate
+  shell: |
+    rm -f /etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}/certs/elastic-certificates.p12 && \
+    export ES_PATH_CONF=/etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}};/usr/share/elasticsearch/bin/elasticsearch-certutil cert \
+    --ca /etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}/certs/elastic-stack-ca.p12 \
+    --ca-pass {{ca_pass}} \
+    --days 100000 \
+    --pass '' \
+    --out /etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}/certs/elastic-certificates.p12 && \
+    chmod 0660 /etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}/certs/* && \
+    chown root.elasticsearch /etc/elasticsearch{{'-'~instance_id if instance_id is defined else ''}}/certs/*

@@ -1,0 +1,9 @@
+---
+#
+# Configure kafka
+#
+
+- name: Copy templated server.properties
+  template:
+    src: "{{role_path}}/files/configures/kafka/server.properties"
+    dest: /opt/kafka/config/server.properties

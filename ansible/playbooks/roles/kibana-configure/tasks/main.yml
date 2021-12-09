@@ -1,0 +1,12 @@
+---
+#
+# Install elasticsearch
+#
+
+- name: Copy templated kibana.yml
+  template:
+    src: "{{role_path}}/files/configures/kibana/kibana.yml"
+    dest: /etc/kibana/kibana.yml
+    owner: root
+    group: kibana
+    mode: 0660

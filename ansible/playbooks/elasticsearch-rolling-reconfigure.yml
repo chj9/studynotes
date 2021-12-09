@@ -1,0 +1,6 @@
+---
+- hosts: elasticsearch
+  serial: 1
+  roles:
+    - { role: elasticsearch-configure }
+    - { role: elasticsearch-rolling-restart }

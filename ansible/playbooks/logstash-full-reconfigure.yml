@@ -1,0 +1,4 @@
+- hosts: logstash
+  roles:
+    - { role: logstash-configure }
+    - { role: logstash-restart }

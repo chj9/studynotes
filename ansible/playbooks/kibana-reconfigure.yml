@@ -1,0 +1,5 @@
+---
+- hosts: kibana
+  roles:
+    - { role: kibana-configure }
+    - { role: kibana-restart }

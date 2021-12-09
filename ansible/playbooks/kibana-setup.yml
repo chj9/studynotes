@@ -1,0 +1,7 @@
+---
+- hosts: kibana
+  roles:
+    - { role: system-stop-firewall }
+    - { role: kibana-install }
+    - { role: kibana-configure }
+    - { role: kibana-restart }
