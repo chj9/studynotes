@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  labels:
+    app: nginx
+  name: nginx
+  namespace: atai-dev
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1 #副本数
+  revisionHistoryLimit: 10 # 历史记录保留的个数
+  selector:
+    matchLabels:
+      app: nginx
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nginx
+    spec:
+      volumes: #配置挂载
+        - name: config
+          configMap:
+            name: merchant-pc
+
+        - name: nginx
+          configMap:
+            name: nginx
+        - name: test-volume
+          hostPath:
+           # 宿主上目录位置
+           path: /data/nginx
+           # 此字段为可选
+           type: Directory
+      containers:
+      - image: openresty/openresty:stretch-fat
+        volumeMounts:
+          - name: config
+            readOnly: true
+            mountPath: /usr/local/openresty/nginx/conf/conf.d/
+          - name: nginx
+            readOnly: true
+            mountPath: /usr/local/openresty/nginx/conf/nginx.conf
+            subPath: nginx.conf
+          - mountPath: /data/nginx
+            name: test-volume
+        imagePullPolicy: IfNotPresent
+        name: nginx
+        resources: # 资源分配
+         limits: # 容器能使用资源的资源的最大值，设置为0表示使用资源无上限
+           cpu: 200m
+           memory: 500Mi
+         requests: # 容器使用的最小资源需求,判断节点是否满足节点需求
+           cpu: 100m
+           memory: 100Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

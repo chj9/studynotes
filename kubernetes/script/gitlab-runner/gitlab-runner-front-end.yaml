@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: gitlab-runner-front-end
+  namespace: atai-ops
+spec:
+  selector:
+    matchLabels:
+      app: gitlab-runner-front-end
+  template:
+    metadata:
+      labels:
+        app: gitlab-runner-front-end
+    spec:
+      nodeSelector:
+        gitlab-ci: front-end
+      terminationGracePeriodSeconds: 10
+      hostNetwork: true
+      containers:
+      - args:
+        - run
+        image: gitlab/gitlab-runner:alpine-v14.5.0
+        imagePullPolicy: IfNotPresent
+        name: gitlab-runner-front-end
+        volumeMounts:
+        - mountPath: /etc/gitlab-runner
+          name: config
+        - mountPath: /var/run/docker.sock
+          name: docker
+          readOnly: true
+      restartPolicy: Always
+      volumes:
+      - configMap:
+          name: front-end-config
+        name: config
+      - hostPath:
+          path: /var/run/docker.sock
+        name: docker

@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cerebro
+  namespace: elastic-system
+  labels:
+    app: cerebro
+
+spec:
+  replicas: 1 #副本数
+  revisionHistoryLimit: 2 # 历史记录保留的个数，方便快速回滚
+  selector:
+    matchLabels:
+      app: cerebro
+  strategy:
+    # 更新方式，滚动更新
+    rollingUpdate:
+      # 可以超过期望值的最大Pod数，可选字段，默认为25%，可以设置成数字或百分比，如果该值为0，那么maxUnavailable不能为0
+      maxSurge: 25%
+      # 指定在回滚或更新时最大不可用的Pod的数量，可选字段，默认25%，可以设置成数字或百分比，如果该值为0，那么maxSurge就不能0
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: cerebro
+      annotations:
+        logging.kubesphere.io/logsidecar-config: '{}'
+    spec:
+      imagePullSecrets:
+        - name: local-ware
+      volumes: #配置挂载
+
+        - name: config # Agent过滤配置设置
+          configMap:
+            name: cerebro
+
+      containers:
+        - name: cerebro
+          image: lmenezes/cerebro:0.9.4
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: config
+              readOnly: true
+              mountPath: /opt/cerebro/conf/application.conf
+              subPath: application.conf 
+          env:
+            - name: "CEREBRO_PORT"
+              value: "9000"
+          ports:
+          - name: http
+            protocol: TCP
+            containerPort: 9000 
+
+          resources: # 资源分配
+            limits: # 容器能使用资源的资源的最大值，设置为0表示使用资源无上限
+              cpu: 500m
+              memory: 512Mi
+            requests: # 容器使用的最小资源需求
+              cpu: 20m
+              memory: 100Mi
+
+          readinessProbe: # 探测容器内的程序是否健康，它的返回值如果为success
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 20 # 初始化时间
+            timeoutSeconds: 15 # 超时时间
+            periodSeconds: 10 # 检测间隔
+            successThreshold: 1 # 检查成功为1次表示就绪
+            failureThreshold: 5 # 检测失败2次表示未就绪
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cerebro
+  namespace: elastic-system
+  labels:
+    app: cerebro
+spec:
+  type: ClusterIP
+  ports:
+    - name: http # Service端口的名称
+      port: 9000 # Service自己的端口,访问方式为 http://turnright-__CI_ENVIRONMENT_SLUG__:80
+      targetPort: 9000 # 后端应用的端口
+      protocol: TCP
+  selector:
+    app: cerebro
+

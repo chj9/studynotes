@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: redis-vip
+  name: redis-vip
+  namespace: redis-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis-vip
+  serviceName: redis-vip
+  template:
+    metadata:
+      labels:
+        app: redis-vip
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - redis-vip
+                topologyKey: "kubernetes.io/hostname"
+      nodeSelector:
+        redis: "true"
+      containers:
+        - image: 'redis:6'
+          #command: 
+          #  ["/bin/bash", "/usr/local/etc/redis/update-node.sh", "redis-server", "/usr/local/etc/redis/redis.conf"]
+          command: 
+             ["redis-server", "/usr/local/etc/redis/redis.conf"]
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: TZ
+              value: Asia/Shanghai
+          imagePullPolicy: IfNotPresent
+          name: redis
+          ports:
+            - containerPort: 6380
+              name: client
+              hostPort: 6380
+              protocol: TCP
+            - containerPort: 16380
+              hostPort: 16380
+              name: gossip
+          volumeMounts:
+            - mountPath: /data
+              name: redis-vip
+              subPath: data
+              readOnly: false
+            - mountPath: /usr/local/etc/redis
+              name: redis-config
+              readOnly: false
+          resources: # 资源分配
+            limits: # 容器能使用资源的资源的最大值，设置为0表示使用资源无上限
+              cpu: 500m
+              memory: 1048Mi
+            requests: # 容器使用的最小资源需求,判断节点是否满足节点需求
+              cpu: 50m
+              memory: 512Mi
+          readinessProbe: # 探测容器内的程序是否健康，它的返回值如果为success
+            tcpSocket:
+              port: 6380
+            initialDelaySeconds: 15 # 初始化时间
+            timeoutSeconds: 15 # 超时时间
+            periodSeconds: 10 # 检测间隔
+            successThreshold: 1 # 检查成功为1次表示就绪
+            failureThreshold: 5 # 检测失败2次表示未就绪
+      dnsPolicy: ClusterFirst
+      volumes:
+        - name: redis-config
+          configMap:
+           name: redis-vip
+  volumeClaimTemplates:  #PVC模板
+  - metadata:
+      name: redis-vip
+      namespace: redis-system
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-vip
+  name: redis-vip
+  namespace: redis-system
+spec:
+  ports:
+    - name: redis-port
+      port: 6380
+      protocol: TCP
+      targetPort: 6380
+  selector:
+    app: redis-vip
+  type: ClusterIP
+  clusterIP: None

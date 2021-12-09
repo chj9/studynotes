@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis
+  namespace: redis-system
+spec:
+  ports:
+    - name: haproxy
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+      nodePort: 31378
+  selector:
+    app: test-redis-haproxy
+  type: NodePort

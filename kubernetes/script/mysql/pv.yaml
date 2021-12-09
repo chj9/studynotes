@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    cattle.io/creator: norman
+  name: mysql-testing-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-disk
+  capacity:
+    storage: 30Gi
+  hostPath:
+    path: /data/mysql/test/data
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-volume
+  namespace: db
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi
+  storageClassName: local-disk
+  volumeMode: Filesystem
+  volumeName: mysql-testing-data
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 30Gi
+  phase: Bound
+
+

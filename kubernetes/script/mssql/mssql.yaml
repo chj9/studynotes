@@ -1,0 +1,74 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: atai-test-mssql
+  namespace: db
+  labels:
+    app: sqlserver
+  annotations:
+    kubesphere.io/alias-name: sqlserver
+spec:
+  replicas: 1
+  serviceName: mssql
+  selector:
+    matchLabels:
+      app: sqlserver
+  template:
+    metadata:
+      labels:
+        app: sqlserver
+    spec:
+      volumes:
+        - name: volume-o1gbti
+          persistentVolumeClaim:
+            claimName: mssql-volume
+        - name: volume-7y975u
+          persistentVolumeClaim:
+            claimName: mssql-bak-volume
+      imagePullSecrets:
+        - name: local-ware
+      nodeSelector:
+        kubernetes.io/hostname: k8s-114
+      containers:
+        - name: mssql
+          image: 'registry.atai.local/atai/mssql:2019-latest'
+          ports:
+            - name: http-1433
+              containerPort: 1433
+              protocol: TCP
+          env:
+            - name: ACCEPT_EULA
+              value: 'Y'
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserverpass
+                  key: password
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserverpass
+                  key: password
+
+          resources:
+            limits:
+              cpu: '16'
+              memory: 6Gi
+            requests:
+              cpu: 200m
+              memory: 980Mi
+          volumeMounts:
+            - name: volume-o1gbti
+              mountPath: /var/opt/mssql/data
+            - name: volume-7y975u
+              mountPath: /home
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+  revisionHistoryLimit: 10
+
+

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    cattle.io/creator: norman
+  name: gitlab-runner
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-disk 
+  capacity:
+    storage: 3Gi
+  hostPath:
+    path: /data/gitlab-runner
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem

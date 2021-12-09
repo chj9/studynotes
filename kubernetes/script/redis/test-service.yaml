@@ -1,0 +1,16 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-0
+  namespace: redis-system
+spec:
+  ports:
+    - name: haproxy
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+      nodePort: 31379
+  selector:
+    statefulset.kubernetes.io/pod-name: redis-cluster-0 
+  type: NodePort
+  sessionAffinity: None

@@ -1,0 +1,37 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: external-es
+  namespace: elastic-system
+spec:
+  ports:
+    - name: server
+      protocol: TCP
+      port: 9200
+      targetPort: 9200
+      nodePort: 31920
+  selector:
+    common.k8s.elastic.co/type: elasticsearch
+    elasticsearch.k8s.elastic.co/cluster-name: atai-testing-eck-cluster
+  type: NodePort
+  sessionAffinity: None
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: external-kibana
+  namespace: elastic-system
+spec:
+  ports:
+    - name: kibana
+      protocol: TCP
+      port: 5601
+      targetPort: 5601
+      nodePort: 31561
+  selector:
+    common.k8s.elastic.co/type: kibana
+    kibana.k8s.elastic.co/name: atai-testing-kibana
+  type: NodePort
+  sessionAffinity: None
+

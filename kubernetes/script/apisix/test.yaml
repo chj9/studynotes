@@ -1,0 +1,16 @@
+apiVersion: apisix.apache.org/v2beta2
+kind: ApisixRoute
+metadata:
+  name: httpserver-route
+  namespace: atai-encrypt
+spec:
+  http:
+  - name: rule1
+    match:
+      hosts:
+      - test.atai
+      paths:
+      - /*
+    backends:
+      - serviceName: turnright-vuepc-v4
+        servicePort: 80

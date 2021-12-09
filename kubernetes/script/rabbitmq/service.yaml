@@ -1,0 +1,25 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: external-rabbitmq
+  namespace: rabbitmq-system
+  labels:
+    app.kubernetes.io/component: rabbitmq
+    app.kubernetes.io/name: test-rabbitmq
+    app.kubernetes.io/part-of: rabbitmq
+spec:
+  ports:
+    - name: management
+      protocol: TCP
+      port: 15672
+      targetPort: 15672
+      nodePort: 31672
+    - name: amqp
+      protocol: TCP
+      port: 5672
+      targetPort: 5672
+      nodePort: 30672
+  selector:
+    app.kubernetes.io/name: test-rabbitmq
+  type: NodePort
+  sessionAffinity: None

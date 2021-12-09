@@ -1,0 +1,16 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-vip-external
+  namespace: redis-system
+spec:
+  ports:
+    - name: haproxy
+      protocol: TCP
+      port: 6379
+      targetPort: 6380
+      nodePort: 31378
+  selector:
+    app: redis-vip
+  type: NodePort
+  sessionAffinity: None

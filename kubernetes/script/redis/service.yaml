@@ -1,0 +1,16 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-external
+  namespace: redis-system
+spec:
+  ports:
+    - name: haproxy
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+      nodePort: 31379
+  selector:
+    app: redis-cluster 
+  type: NodePort
+  sessionAffinity: None

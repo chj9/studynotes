@@ -1,0 +1,56 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: atai-testing-eck-cluster
+  namespace: elastic-system
+spec:
+  version: 7.12.1
+  image: registry.atai.local/atai/elasticsearch:7.12.1
+  http:
+     tls:
+       selfSignedCertificate:
+         disabled: true
+  nodeSets:
+  - name: es-testing
+    count: 2
+    config:
+       xpack.security.authc:
+         anonymous:
+            username: anonymous
+            roles: superuser
+            authz_exception: false
+    podTemplate:
+      spec:
+        imagePullSecrets:
+          - name: local-ware
+        nodeSelector:
+          elasticsearch: "true"
+        containers:
+        - name: elasticsearch
+          resources:
+            limits:
+              memory: 12Gi
+              cpu: 8
+          readinessProbe:
+            tcpSocket:
+              port: 9200
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 12
+            successThreshold: 1
+            timeoutSeconds: 12
+          env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            - name: ES_JAVA_OPTS
+              value: "-Xms6g -Xmx6g"
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 150Gi
+        storageClassName: local-disk

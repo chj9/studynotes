@@ -1,0 +1,19 @@
+apiVersion: logging.kubesphere.io/v1alpha2
+kind: Input
+metadata:
+  annotations:
+  labels:
+    logging.kubesphere.io/component: logging
+    logging.kubesphere.io/enabled: "true"
+  name: tail-java
+  namespace: kubesphere-logging-system
+spec:
+  tail:
+    db: /fluent-bit/tail/pos-atai.db
+    dbSync: Normal
+    memBufLimit: 5MB
+    parser: docker
+    path: /var/log/containers/turnright*.log
+    refreshIntervalSeconds: 10
+    skipLongLines: true
+    tag: atai-app

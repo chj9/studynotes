@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry-ui
+  namespace: docker-registry
+  labels:
+    app: registry-ui
+spec:
+  replicas: 1 #副本数
+  revisionHistoryLimit: 2 # 历史记录保留的个数，方便快速回滚
+  selector:
+    matchLabels:
+      app: registry-ui
+  template:
+    metadata:
+      labels:
+        app: registry-ui
+    spec:
+      containers:
+      - name: registry-ui
+        image: joxit/docker-registry-ui:2.0.9
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        env:
+        - name: REGISTRY_TITLE
+          value: "My Private Docker Registry"
+        - name: NGINX_PROXY_PASS_URL
+          value: "http://docker-registry:5000"
+        - name: SINGLE_REGISTRY
+          value: "true"
+        - name: NGINX_PROXY_HEADER_X_Forwarded_For
+          value: "$$proxy_add_x_forwarded_for"
+        - name: NGINX_PROXY_HEADER_Authorization
+          value: "Basic cmVnaXN0cnk6dWk="
+        #volumeMounts:
+        # - name: nginx-env
+        #   readOnly: true
+        #   mountPath: /etc/nginx/
+        #   subPath: .env
+      volumes: #配置挂载
+        - name: nginx-env # 应用配置挂载
+          configMap:
+            name: nginx-env
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry-ui
+  namespace: docker-registry
+spec:
+  type: ClusterIP
+  ports:
+      - port: 80
+        targetPort: 80
+        protocol: TCP
+  selector:
+    app: registry-ui
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  name: registry-ui
+  namespace: docker-registry
+spec:
+  rules:
+    - host: registry.atai.ui
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: registry-ui
+                port:
+                  number: 80

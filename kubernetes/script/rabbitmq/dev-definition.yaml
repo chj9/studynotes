@@ -1,0 +1,152 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  # RabbitMQ实例名称
+  name: dev-rabbitmq
+  # 应用所在命名空间
+  namespace: rabbitmq-system
+spec:
+  affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - rabbitmq-dev
+            topologyKey: "kubernetes.io/hostname"
+        
+  override:
+    statefulSet:
+      spec:
+        template:
+          metadata:
+            labels:
+               app: rabbitmq
+          spec:
+            nodeSelector:
+              rabbitmq: "true"
+            containers:
+              - name: rabbitmq
+                image: rabbitmq:3.8.0-management
+                volumeMounts:
+                  - mountPath: /opt/rabbitmq/community-plugins
+                    name: community-plugins
+                  - name: app-config
+                    mountPath: /etc/rabbitmq/rabbitmq.conf
+                    subPath: rabbitmq.conf
+            volumes:
+              - name: community-plugins
+                emptyDir: {}
+              - name: app-config # 应用配置挂载
+                configMap:
+                    name: rabbitmq
+            initContainers:
+              - command:
+                  - sh
+                  - -c
+                  - curl -L -v https://anguschen.oss-cn-shenzhen.aliyuncs.com/rabbitmq_delayed_message_exchange-3.8.0.ez --output /community-plugins/rabbitmq_delayed_message_exchange-3.8.0.ez
+                image: curlimages/curl
+                imagePullPolicy: IfNotPresent
+                name: copy-community-plugins
+                resources:
+                  limits:
+                    cpu: 100m
+                    memory: 500Mi
+                  requests:
+                    cpu: 100m
+                    memory: 500Mi
+                terminationMessagePolicy: FallbackToLogsOnError
+                volumeMounts:
+                  - mountPath: /community-plugins/
+                    name: community-plugins
+  persistence:
+    # 数据持久化storageClass
+    storageClassName: local-disk
+    # 数据卷大小
+    storage: 10Gi
+  # 实例pod数量
+  replicas: 3
+  service:
+    # 服务类型,可选参数:ClusterIP,NodePortLoadBalancer
+    type: ClusterIP
+  # 资源限制
+  resources:
+    requests:
+      cpu: 2000m
+      memory: 6Gi
+    limits:
+      cpu: 2000m
+      memory: 6Gi
+  rabbitmq:
+    # 额外增加的插件
+    additionalPlugins:
+      - rabbitmq_management
+      - rabbitmq_management_agent
+      - rabbitmq_web_dispatch
+      - rabbitmq_tracing
+      - rabbitmq_shovel_management
+      - rabbitmq_shovel
+      - rabbitmq_delayed_message_exchange
+      - rabbitmq_peer_discovery_k8s
+    envConfig: |
+      PLUGINS_DIR=/opt/rabbitmq/plugins:/opt/rabbitmq/community-plugins
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    cattle.io/creator: norman
+  name: rabbitmq-dev-0
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-disk
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: /data/rabbitmq/dev
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Delete
+  volumeMode: Filesystem
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    cattle.io/creator: norman
+  name: rabbitmq-dev-1
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-disk
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: /data/rabbitmq/dev
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Delete
+  volumeMode: Filesystem
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    cattle.io/creator: norman
+  name: rabbitmq-dev-2
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-disk
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: /data/rabbitmq/dev
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Delete
+  volumeMode: Filesystem
+

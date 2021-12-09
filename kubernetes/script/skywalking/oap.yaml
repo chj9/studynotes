@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: skywalking
+  labels:
+    app: oap
+  name: oap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oap
+  template:
+    metadata:
+      labels:
+        app: oap
+    spec:
+      volumes:
+        - name: oap
+          configMap:
+            name: oap
+      containers:
+        - name: oap
+          imagePullPolicy: IfNotPresent
+          image: 'apache/skywalking-oap-server:8.8.1'
+          ports:
+            - name: server
+              protocol: TCP
+              containerPort: 11800
+            - name: ui
+              protocol: TCP
+              containerPort: 12800
+          volumeMounts:
+            - name: oap
+              readOnly: true
+              mountPath: /skywalking/config/alarm-settings.yml
+              subPath: alarm-settings.yml
+          env:
+            - name: SW_STORAGE
+              value: elasticsearch
+            - name: SW_STORAGE_ES_CLUSTER_NODES
+              value: 'atai-testing-eck-cluster-es-http.elastic-system:9200'
+            - name: SW_HEALTH_CHECKER
+              value: default
+            - name: JAVA_OPTS
+              value: "-Xms2048m -Xmx2048m"
+            - name: SW_CORE_RECORD_DATA_TTL
+              value: '3'
+            - name: SW_CORE_METRICS_DATA_TTL
+              value: '3'
+            - name: TZ
+              value: Asia/Shanghai
+            - name: SW_NAMESPACE
+              value: skywalking
+          resources:
+            requests:
+              cpu: 200m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%

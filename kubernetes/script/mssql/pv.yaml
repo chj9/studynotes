@@ -1,0 +1,82 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    cattle.io/creator: norman
+  name: mssql-testing-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-disk
+  capacity:
+    storage: 50Gi
+  hostPath:
+    path: /data/mssql/test/data
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    cattle.io/creator: norman
+  name: mssql-testing-bak
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-disk
+  capacity:
+    storage: 50Gi
+  hostPath:
+    path: /data/mssql/test/bak
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-volume
+  namespace: db
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: local-disk
+  volumeMode: Filesystem
+  volumeName: mssql-testing-data
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 50Gi
+  phase: Bound
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-bak-volume
+  namespace: db
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: local-disk
+  volumeMode: Filesystem
+  volumeName: mssql-testing-bak
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 50Gi
+  phase: Bound

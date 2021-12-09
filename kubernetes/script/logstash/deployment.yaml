@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+  namespace: elastic-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - image: docker.elastic.co/logstash/logstash:7.12.1
+          name: logstash
+          ports:
+            - containerPort: 5044
+          env:
+            - name: ES_HOSTS
+              value: "atai-testing-eck-cluster-es-http:9200"
+          resources: 
+              limits:
+                cpu: "4"
+                memory: 4096Mi
+              requests:
+                cpu: 500m
+                memory: 1024Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/logstash/config
+            - name: logstash-pipeline-volume
+              mountPath: /usr/share/logstash/pipeline
+          startupProbe: # 可选，检测容器内进程是否完成启动。注意三种检查方式同时只能使用一种，顺序执行。
+            exec: # 检测方式，生产环境建议使用httpGet实现接口级健康检查，健康检查由应用程序提供。
+              command:
+                - /bin/sh
+                - -c
+                - ps -ef|grep java|grep -v grep
+            initialDelaySeconds: 10 # 初始化时间
+            timeoutSeconds: 15 # 超时时间
+            periodSeconds: 10 # 检测间隔
+            successThreshold: 1 # 检查成功为1次表示就绪
+            failureThreshold: 3 # 检测失败2次表示未就绪
+          readinessProbe: # 探测容器内的程序是否健康，它的返回值如果为success
+            tcpSocket:
+              port: 9600
+            initialDelaySeconds: 30 # 初始化时间
+            timeoutSeconds: 15 # 超时时间
+            periodSeconds: 10 # 检测间隔
+            successThreshold: 1 # 检查成功为1次表示就绪
+            failureThreshold: 5 # 检测失败2次表示未就绪
+      volumes:
+        - name: config-volume
+          configMap:
+              name: logstash-config
+        - name: logstash-pipeline-volume
+          configMap:
+              name: logstash-pipeline
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: logstash
+  namespace: elastic-system
+spec:
+  ports:
+    - name: tcp
+      protocol: TCP
+      port: 5044
+      targetPort: 5044
+      nodePort: 31514
+    - name: http
+      protocol: TCP
+      port: 9999
+      targetPort: 9999
+      nodePort: 31813
+  selector:
+    app: logstash
+  type: NodePort
+  sessionAffinity: None

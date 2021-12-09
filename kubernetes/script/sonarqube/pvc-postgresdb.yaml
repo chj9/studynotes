@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresdb
+  namespace: sonarqube
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+  storageClassName: local-disk
+  volumeMode: Filesystem
+  volumeName: postgresdb
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 3Gi
+  phase: Bound
+
+

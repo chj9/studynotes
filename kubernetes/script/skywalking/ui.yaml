@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: skywalking
+  labels:
+    app: skywalking-ui
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skywalking-ui
+  template:
+    metadata:
+      labels:
+        app: skywalking-ui
+    spec:
+      containers:
+        - name: skywalking-ui
+          imagePullPolicy: IfNotPresent
+          image: 'apache/skywalking-ui:8.8.1'
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 8080
+          env:
+            - name: SW_OAP_ADDRESS
+              value: http://skywalking-oap-ui:12800
+          resources: # 资源分配
+            limits: # 容器能使用资源的资源的最大值，设置为0表示使用资源无上限
+              cpu: 100m
+              memory: 500Mi
+            requests: # 容器使用的最小资源需求
+              cpu: 50m
+              memory: 100Mi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%

@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-redis
+  name: test-redis-haproxy
+  namespace: redis-system
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 3
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: test-redis-haproxy
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: test-redis-haproxy
+      name: test-redis-haproxy
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: In
+                values:
+                - ""
+            weight: 100
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: test-redis-haproxy
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - image: haproxy:2.0.22-alpine
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8888
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: haproxy
+        ports:
+        - containerPort: 6379
+          name: redis
+          protocol: TCP
+        resources: # 资源分配
+            limits: # 容器能使用资源的资源的最大值，设置为0表示使用资源无上限
+              cpu: 100m
+              memory: 512Mi
+            requests: # 容器使用的最小资源需求,判断节点是否满足节点需求
+              cpu: 10m
+              memory: 100Mi
+
+        volumeMounts:
+        - mountPath: /usr/local/etc/haproxy
+          name: data
+        - mountPath: /run/haproxy
+          name: shared-socket
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - /readonly/haproxy_init.sh
+        command:
+        - sh
+        image: haproxy:2.0.22-alpine
+        imagePullPolicy: IfNotPresent
+        name: config-init
+        resources: # 资源分配
+            limits: # 容器能使用资源的资源的最大值，设置为0表示使用资源无上限
+              cpu: 100m
+              memory: 512Mi
+            requests: # 容器使用的最小资源需求,判断节点是否满足节点需求
+              cpu: 10m
+              memory: 100Mi
+        volumeMounts:
+        - mountPath: /readonly
+          name: config-volume
+          readOnly: true
+        - mountPath: /data
+          name: data
+      restartPolicy: Always
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: redis-ha-configmap
+        name: config-volume
+      - emptyDir: {}
+        name: shared-socket
+      - emptyDir: {}
+        name: data
+

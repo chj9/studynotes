@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: skywalking-service
+  namespace: skywalking
+  labels:
+    app: skywalking-ui
+spec:
+  type: ClusterIP
+  selector:
+    app: skywalking-ui
+  ports:
+    - port: 8080
+      targetPort: 8080
+#      nodePort: 30000 

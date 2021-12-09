@@ -1,0 +1,156 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-registry
+  namespace: docker-registry
+  labels:
+    app: docker-registry
+spec:
+  replicas: 1 #副本数
+  revisionHistoryLimit: 2 # 历史记录保留的个数，方便快速回滚
+  selector:
+    matchLabels:
+      app: docker-registry
+  template:
+    metadata:
+      labels:
+        app: docker-registry
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-114
+      containers:
+      - name: docker-registry
+        image: registry:2.7.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000 
+        env:
+        - name: REGISTRY_HTTP_ADDR
+          value: ":5000"
+        - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
+          value: "/var/lib/registry"
+        - name: REGISTRY_HTTP_TLS_CERTIFICATE
+          value: "/certs/domain.crt"
+        - name: REGISTRY_HTTP_TLS_KEY
+          value: "/certs/domain.key"
+        - name: REGISTRY_AUTH
+          value: "htpasswd"
+        - name: REGISTRY_AUTH_HTPASSWD_PATH
+          value: "/certs/htpasswd"
+        - name: REGISTRY_AUTH_HTPASSWD_REALM
+          value: "Registry Realm"
+        volumeMounts:
+        - name: reg-data
+          mountPath: /var/lib/registry
+        - name: reg-auth
+          mountPath: "/certs"
+          readOnly: true
+        - name: config
+          readOnly: true
+          mountPath: /etc/docker/registry/
+      - name: registry-ui
+        image: joxit/docker-registry-ui:2.0.9
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        env:
+        - name: REGISTRY_TITLE
+          value: "奇兵到家-测试环境-容器仓库"
+        - name: NGINX_PROXY_PASS_URL
+          value: "https://localhost:5000"
+        - name: SINGLE_REGISTRY
+          value: "true"
+        - name: PULL_URL
+          value: "registry.atai.local"
+        - name: DELETE_IMAGES
+          value: "true"
+        - name: SHOW_CONTENT_DIGEST
+          value: "true"
+      volumes:
+      - name: config # 应用配置挂载
+        configMap:
+          name: config
+      - name: reg-data
+        persistentVolumeClaim:
+            claimName: docker-registry
+      - name: reg-auth
+        secret:
+           secretName: registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-registry
+  namespace: docker-registry
+spec:
+  type: ClusterIP
+  ports:
+      - port: 5000
+        targetPort: 5000
+        protocol: TCP
+  selector:
+    app: docker-registry
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry-ui
+  namespace: docker-registry
+spec:
+  type: ClusterIP
+  ports:
+      - port: 80
+        targetPort: 80
+        protocol: TCP
+  selector:
+    app: docker-registry
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  name: registry-ui
+  namespace: docker-registry
+spec:
+  rules:
+    - host: registry.atai.ui
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: registry-ui
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "900m"
+  name: docker-registry
+  namespace: docker-registry
+spec:
+  rules:
+    - host: registry.atai.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: docker-registry
+                port:
+                  number: 5000
+  tls:
+     - hosts:
+        - registry.atai.local
+       secretName: secret-tls

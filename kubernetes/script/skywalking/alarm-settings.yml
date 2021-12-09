@@ -1,0 +1,35 @@
+rules:
+  service_resp_time_rule:
+    metrics-name: service_resp_time
+    op: ">"
+    threshold: 10000
+    period: 10
+    count: 3
+    silence-period: 5
+    message: 服务【{name}】的平均响应时间在最近2分钟超过10s
+  service_instance_resp_time_rule:
+    metrics-name: service_instance_resp_time
+    op: ">"
+    threshold: 10000
+    period: 10
+    count: 3
+    silence-period: 5
+    message: 实例【{name}】的平均响应时间在最近3分钟超过10s
+  endpoint_resp_time_rule:
+    metrics-name: endpoint_avg
+    threshold: 10000
+    op: ">"
+    period: 10
+    count: 3
+    silence-period: 3
+    message: 接口【{name}】的平均响应时间在最近3分钟超过10s
+wechatHooks:
+  textTemplate: |-
+    {
+      "msgtype": "text",
+      "text": {
+        "content": "Apache SkyWalking Alarm: \n %s."
+      }
+    }    
+  webhooks:
+    - https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=733efa36-0721-4973-af27-b278c9039575
