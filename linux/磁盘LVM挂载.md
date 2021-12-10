@@ -31,9 +31,10 @@
 `lvextend /dev/mapper/backup-data -l+100%FREE`
 `xfs_growfs /dev/mapper/backup-data`
 #### 8. 挂载
-`vim /etc/fstab`
+`vim /etc/fstab`<br>
+修改挂载配置<br>
 ![4.png](images/4.png)
-检查是否挂载成功
+检查是否挂载成功<br>
 ![5.png](images/5.png)
 ## 扩容
 执行以上2,4,7步骤即可
