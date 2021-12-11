@@ -28,16 +28,16 @@
 #### 6. mkfs 格式化 lv
 `mkfs.xfs -f  /dev/mapper/backup-data`
 #### 7. lvextend 增加到逻辑卷
-`lvextend /dev/mapper/backup-data -l+100%FREE`
-`xfs_growfs /dev/mapper/backup-data`
+`lvextend /dev/mapper/backup-data -l+100%FREE`  
+`xfs_growfs /dev/mapper/backup-data`  
 #### 8. 挂载
-`vim /etc/fstab`<br>
-修改挂载配置<br>
+`vim /etc/fstab`  
+修改挂载配置  
 ![4.png](images/4.png)
-检查是否挂载成功<br>
+检查是否挂载成功  
 ![5.png](images/5.png)
 ## 扩容
-执行以上2,4,7步骤即可
-lvm支持动态扩容
+执行以上2,4,7步骤即可  
+lvm支持动态扩容  
 ## 删除 unknown 设备
 `vgreduce --removemissing VG`
