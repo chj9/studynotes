@@ -52,7 +52,7 @@ https://blog.csdn.net/johnnycode/article/details/40624403
 ![img.png](images/9.png)<br>
 修改网卡信息<br>
 `vim /etc/sysconfig/network-scripts/ifcfg-enp6s0f0`
-```yaml
+```properties
 TYPE=Ethernet
 PROXY_METHOD=none
 BROWSER_ONLY=no
