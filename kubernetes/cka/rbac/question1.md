@@ -1,17 +1,17 @@
 Document Url  
 https://kubernetes.io/zh/docs/reference/access-authn-authz/rbac/
-##Question 1
+## Question 1
 Create a service account name dev-sa in default namespace,dev-sa can blow components in dev namespace:
 - Deployment
 - StatefulSet
 - DaemonSet
-##Answer 1
-####step 1
+## Answer 1
+#### step 1
 document url  
 https://kubernetes.io/zh/docs/tasks/configure-pod-container/configure-service-account/  
 create service account  
 `kubectl create sa dev-sa`
-####step 2
+#### step 2
 create role.yaml
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -27,7 +27,7 @@ rules:
 `kubectl apply -f role.yaml`
 
 > Note that the resource object suffix has an extra s, the old version may not
-####step 3
+#### step 3
 create rolebinding.yaml
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -46,7 +46,7 @@ roleRef:
   apiGroup: "rbac.authorization.k8s.io"
 ```
 `kubectl apply -f rolebinding.yaml`
-###step 4
+### step 4
 verify  
 
 `kubectl auth can-i  create daemonset  -n cka --as system:serviceaccount:default:dev-sa`  

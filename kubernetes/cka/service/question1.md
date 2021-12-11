@@ -1,9 +1,9 @@
 Document Url  
 https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/
-##Question 1
+## Question 1
 There is pod name pod-nginx, create a service name service-nginx, use nodePort to expose the pod,That create a pod use image busybox to nslookup the pod pod-nginx and service service-nginx
 
-##Answer 1
+## Answer 1
 ### step 1
 execute command output config to a file  
 `kubectl run pod-nginx --image=nginx --dry-run=client -oyaml > pod-nginx.yaml`  
@@ -43,7 +43,7 @@ spec:
 `kubectl apply -f pod-nginx.yaml -n cka`  
 pod/pod-nginx created  
 service/pod-nginx created  
-###step 2
+### step 2
 execute command output config to a file  
 `kubectl run pod-1 --image=nginx --dry-run=client -oyaml > pod-nginx.yaml`  
 supplement the configuration
@@ -69,7 +69,7 @@ spec:
 status: {}
 ```
 `kubectl apply -f pod-1.yaml -n cka`
-###step3
+### step3
 Pod  
 `kubectl get pod -owide`  
 `kubectl exec -it busybox -- nslookup <pod-ip>`  

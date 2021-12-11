@@ -14,7 +14,7 @@
 - LV   (Logical Volume)      逻辑卷
 
 ![1.png](images/1.png)  
-###举例
+### 举例
 #### 1. pvs 查看当前 pv
 ![2.png](images/2.png)  
 #### 2. pvcreate 添加 sdb1 到 pv
