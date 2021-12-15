@@ -40,18 +40,18 @@ https://blog.csdn.net/cuma2369/article/details/107666522
 ### 设置网卡
 https://blog.csdn.net/johnnycode/article/details/40624403   
 从一台window机器获取自己局域网的一些网络设置信息  
-![7.png](images/7.png)<br>
+![7.png](images/7.png)  
 
-输入命令获取网卡信息<br>
-`ip add`
+输入命令获取网卡信息  
+`ip add`  
 
-![img.png](images/8.png)
+![img.png](images/8.png)  
 
-测试网卡是否接通网线<br>
-`ethtool enp6s0f1 | grep detect`
-![img.png](images/9.png)<br>
-修改网卡信息<br>
-`vim /etc/sysconfig/network-scripts/ifcfg-enp6s0f0`
+测试网卡是否接通网线  
+`ethtool enp6s0f1 | grep detect`  
+![img.png](images/9.png)  
+修改网卡信息  
+`vim /etc/sysconfig/network-scripts/ifcfg-enp6s0f0`  
 ```properties
 TYPE=Ethernet
 PROXY_METHOD=none
