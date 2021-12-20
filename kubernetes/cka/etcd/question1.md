@@ -32,7 +32,7 @@ Answer
 ```shell
 ETCDCTL_API=3 etcdctl --endpoints https://k8s-01:2379 \
 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key \
-snapshot save /root/cka/etcd-backup.db.
+snapshot save /root/cka/etcd-backup.db
 ```
 If there is a requirement for backup and recovery
 ```shell
