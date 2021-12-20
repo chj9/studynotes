@@ -9,5 +9,5 @@ Scale the deployment scale-deploy in namespace cka to three pod and record it.
 `kubectl describe deployment scale-deploy -n cka`  
 in annotations have value
 ```yaml
-kubernetes.io/change-cause: kubectl scale deployment scale-deploy --replicas=3 --record=true
+kubectl scale deployment scale-deploy --replicas=3 --record=true
 ```

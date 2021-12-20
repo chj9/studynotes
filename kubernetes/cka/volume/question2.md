@@ -1,47 +1,49 @@
+Document Url  
+https://kubernetes.io/zh/docs/concepts/storage/persistent-volumes/
 ## Question 1
-
->Note,this log file only can be share within the pod.
+There is a persistent volume name dev-pv in the cluster,create a persistent volume clain name dev-pvc,make sure this persistent volume clain will bound the persistent volume, and then create a pod name test-pvc that mount this pvc at path /tmp/data, use nginx image.
 
 ## Answer 1
-Document Url  
-https://kubernetes.io/docs/concepts/storage/volumes/
 ### step 1
-create a log_pod.yaml
-run this command output config file
-`kubectl run log --image=busybox --dry-run=client -oyaml > log-pod.yaml`
+get persistent volume name dev-pv then get storage class and `accessModes` and `resources request storage`
+`kubectl get pv dev-pv`  
+`kubectl describe pv dev-pv`
+
+### step 2
+create persistent volume clain
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dev-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+### step 3
+create a pod name test-dev,use image nginx  
+`kubectl run test-dev --image nginx --dry-run=client -oyaml`
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: log
-  namespace: cka
+  labels:
+    run: test-dev
+  name: test-dev
 spec:
-  volumes:
-    - name: log-volume
-      emptyDir: {}
   containers:
-  - image: busybox:latest
-    name: log-pro
-    command:
-      - sh
-      - -c
-      - echo 'important information' >> /log/data/output.log;sleep 1d
+  - image: nginx
+    name: test-dev
     volumeMounts:
-    - mountPath: /log/data/
-      name: log-volume
-  - image: busybox:latest
-    name: log-cus
-    command:
-      - sh
-      - -c
-      - cat /log/data/output.log;sleep 1d
-    volumeMounts:
-      - mountPath: /log/data/
-        name: log-volume
-        readOnly: true
+      - mountPath: "/tmp/data"
+        name: mypd
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  volumes:
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: dev-pvc
 ```
-> busybox must execute the command sleep
-### step 2
-execute command  
-`kubectl logs -f log -n cka -c log-cus`  
-response **important information** successful
